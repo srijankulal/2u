@@ -6,12 +6,13 @@ import { useToast } from '../../components/ToastProvider'
 import { createTypedLetterFn, createScannedLetterFn } from '../../server/letters'
 
 const PRESET_OPTIONS = [
-    { label: '6 Months', months: 6, years: 0 },
-    { label: '1 Year', months: 0, years: 1 },
-    { label: '2 Years', months: 0, years: 2 },
-    { label: '3 Years', months: 0, years: 3 },
-    { label: '5 Years', months: 0, years: 5 },
-    { label: '10 Years', months: 0, years: 10 },
+    { label: 'Today (Test)', months: 0, years: 0, minutes: 2 },
+    { label: '6 Months', months: 6, years: 0, minutes: 0 },
+    { label: '1 Year', months: 0, years: 1, minutes: 0 },
+    { label: '2 Years', months: 0, years: 2, minutes: 0 },
+    { label: '3 Years', months: 0, years: 3, minutes: 0 },
+    { label: '5 Years', months: 0, years: 5, minutes: 0 },
+    { label: '10 Years', months: 0, years: 10, minutes: 0 },
 ]
 
 const INSPIRATION_PROMPTS = [
@@ -21,11 +22,25 @@ const INSPIRATION_PROMPTS = [
     { title: 'Wisdom & Habits', text: 'Remember the lessons we learned the hard way this year: never compromise on...' },
 ]
 
-function getPresetDate(years: number, months: number): string {
+function formatToLocalInputDate(d: Date): string {
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hours = String(d.getHours()).padStart(2, '0')
+    const mins = String(d.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day}T${hours}:${mins}`
+}
+
+function getPresetDate(years: number, months: number, minutes = 0): string {
     const d = new Date()
-    d.setFullYear(d.getFullYear() + years)
-    d.setMonth(d.getMonth() + months)
-    return d.toISOString().slice(0, 16)
+    if (years === 0 && months === 0 && minutes > 0) {
+        d.setMinutes(d.getMinutes() + minutes)
+    } else {
+        d.setFullYear(d.getFullYear() + years)
+        d.setMonth(d.getMonth() + months)
+        if (minutes > 0) d.setMinutes(d.getMinutes() + minutes)
+    }
+    return formatToLocalInputDate(d)
 }
 
 export const Route = createFileRoute('/app/compose')({
@@ -69,16 +84,16 @@ function ComposePage() {
         maxSize: 10 * 1024 * 1024, // 10MB
     })
 
-    // Min date: tomorrow
-    const minDate = new Date(Date.now() + 86400000).toISOString().slice(0, 16)
+    // Min date: now (allows today)
+    const minDate = formatToLocalInputDate(new Date())
 
     const canWrite = (user?.slotsFree ?? 5) > 0
 
     const wordsCount = typed.content.trim().split(/\s+/).filter(Boolean).length
     const readingTime = Math.max(1, Math.ceil(wordsCount / 200))
 
-    const handlePresetClick = (years: number, months: number, label: string) => {
-        const dateStr = getPresetDate(years, months)
+    const handlePresetClick = (years: number, months: number, minutes: number | undefined, label: string) => {
+        const dateStr = getPresetDate(years, months, minutes || 0)
         setActivePreset(label)
         if (mode === 'typed') {
             setTyped(p => ({ ...p, deliverAt: dateStr }))
@@ -271,7 +286,7 @@ function ComposePage() {
                                     key={opt.label}
                                     type="button"
                                     className={`date-preset-btn ${activePreset === opt.label ? 'active' : ''}`}
-                                    onClick={() => handlePresetClick(opt.years, opt.months, opt.label)}
+                                    onClick={() => handlePresetClick(opt.years, opt.months, opt.minutes, opt.label)}
                                 >
                                     {opt.label}
                                 </button>
@@ -418,7 +433,7 @@ function ComposePage() {
                                     key={opt.label}
                                     type="button"
                                     className={`date-preset-btn ${activePreset === opt.label ? 'active' : ''}`}
-                                    onClick={() => handlePresetClick(opt.years, opt.months, opt.label)}
+                                    onClick={() => handlePresetClick(opt.years, opt.months, opt.minutes, opt.label)}
                                 >
                                     {opt.label}
                                 </button>

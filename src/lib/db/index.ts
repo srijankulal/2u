@@ -2,7 +2,11 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
 
-const connectionString = process.env['DATABASE_URL'] || ''
+const connectionString = (process.env as Record<string, string | undefined>)['DATABASE_URL'] || ''
+
+if (!connectionString) {
+    console.warn('⚠️ DATABASE_URL is not set in environment variables.')
+}
 
 const isCloudDatabase = connectionString.includes('supabase.com') ||
     connectionString.includes('neon.tech') ||
@@ -11,7 +15,7 @@ const isCloudDatabase = connectionString.includes('supabase.com') ||
     connectionString.includes('aws.')
 
 // Disable prefetch for transaction poolers (like Supabase port 6543)
-export const client = postgres(connectionString, {
+export const client = postgres(connectionString || 'postgres://localhost:5432/postgres', {
     prepare: false,
     ssl: isCloudDatabase ? 'require' : undefined,
     max: 10,

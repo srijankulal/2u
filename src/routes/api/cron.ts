@@ -24,6 +24,13 @@ export const Route = createFileRoute('/api/cron')({
                 }
 
                 try {
+                    if (!env.DATABASE_URL) {
+                        return new Response(
+                            JSON.stringify({ error: 'DATABASE_URL environment variable is missing in Vercel' }),
+                            { status: 500, headers: { 'Content-Type': 'application/json' } }
+                        )
+                    }
+
                     const now = new Date()
 
                     const pendingLetters = await db

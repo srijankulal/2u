@@ -108,7 +108,7 @@ function LetterDetailPage() {
     const formatDateTime = (d: string) =>
         new Date(d).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
-    const minDate = new Date(Date.now() + 86400000).toISOString().slice(0, 16)
+    const minDate = new Date(Date.now() + 60000).toISOString().slice(0, 16)
 
     if (loading) {
         return (

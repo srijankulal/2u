@@ -84,8 +84,11 @@ export const createTypedLetterFn = createServerFn({ method: 'POST' })
         }
 
         const deliverDate = new Date(data.deliverAt)
-        if (deliverDate.getTime() <= Date.now()) {
-            throw new Error('Delivery date must be in the future')
+        if (isNaN(deliverDate.getTime())) {
+            throw new Error('Invalid delivery date')
+        }
+        if (deliverDate.getTime() < Date.now() - 60000) {
+            throw new Error('Delivery date cannot be in the past')
         }
 
         const { data: created, error } = await supabase
@@ -131,8 +134,11 @@ export const createScannedLetterFn = createServerFn({ method: 'POST' })
         }
 
         const deliverDate = new Date(data.deliverAt)
-        if (deliverDate.getTime() <= Date.now()) {
-            throw new Error('Delivery date must be in the future')
+        if (isNaN(deliverDate.getTime())) {
+            throw new Error('Invalid delivery date')
+        }
+        if (deliverDate.getTime() < Date.now() - 60000) {
+            throw new Error('Delivery date cannot be in the past')
         }
 
         // Upload to Cloudinary
@@ -191,8 +197,11 @@ export const rescheduleLetterFn = createServerFn({ method: 'POST' })
         if (!user) throw new Error('Unauthorized')
 
         const deliverDate = new Date(data.deliverAt)
-        if (deliverDate.getTime() <= Date.now()) {
-            throw new Error('Delivery date must be in the future')
+        if (isNaN(deliverDate.getTime())) {
+            throw new Error('Invalid delivery date')
+        }
+        if (deliverDate.getTime() < Date.now() - 60000) {
+            throw new Error('Delivery date cannot be in the past')
         }
 
         const { data: updated, error } = await supabase
