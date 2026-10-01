@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { supabase } from '../../utils/supabase'
 import { sendLetterEmail } from '../../lib/email'
+import { decryptText } from '../../lib/crypto'
 
 export const Route = createFileRoute('/api/cron')({
     server: {
@@ -53,15 +54,19 @@ export const Route = createFileRoute('/api/cron')({
                                 throw new Error(`Recipient user not found for letter ${l.id}`)
                             }
 
+                            const decryptedTitle = decryptText(l.title) || 'Untitled Letter'
+                            const decryptedContent = decryptText(l.content) ?? null
+                            const decryptedImageUrl = decryptText(l.image_url) ?? null
+
                             await sendLetterEmail({
                                 to: user.email,
                                 toName: user.name || 'Friend',
                                 letter: {
                                     id: l.id,
                                     userId: l.user_id,
-                                    title: l.title,
-                                    content: l.content,
-                                    imageUrl: l.image_url,
+                                    title: decryptedTitle,
+                                    content: decryptedContent,
+                                    imageUrl: decryptedImageUrl,
                                     type: l.type,
                                     deliverAt: l.deliver_at,
                                     deliveredAt: l.delivered_at,

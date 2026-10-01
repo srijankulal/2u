@@ -13,7 +13,11 @@ function RegisterPage() {
       <div className="auth-container">
         <Link to="/" className="auth-logo-link" title="Return to Home">
           <div className="auth-brand">
-            <div className="auth-seal-badge">2U</div>
+            <img
+              src="/favicon.png"
+              alt="2U Logo"
+              style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+            />
             <div className="auth-brand-text">
               <span className="auth-brand-title">2U Postal</span>
               <span className="auth-brand-sub">Letters to your future self</span>

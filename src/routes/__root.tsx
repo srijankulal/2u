@@ -16,6 +16,8 @@ export const Route = createRootRoute({
       { name: 'description', content: 'Write letters to your future self and receive them on the date you choose.' },
     ],
     links: [
+      { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+      { rel: 'apple-touch-icon', href: '/favicon.png' },
       { rel: 'stylesheet', href: appCss },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },

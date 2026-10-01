@@ -62,7 +62,11 @@ function AppLayout() {
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <Link to="/" className="sidebar-logo" title="Return to 2U Home">
-          <div className="sidebar-logo-seal">2U</div>
+          <img
+            src="/favicon.png"
+            alt="2U Logo"
+            style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0, boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
+          />
           <div>
             <div className="sidebar-logo-text">2U Postal</div>
             <div className="sidebar-logo-sub">Letters to future self</div>
@@ -120,7 +124,7 @@ function AppLayout() {
           <button
             onClick={handleLogout}
             title="Sign out"
-            style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "rgba(255,255,255,0.6)", borderRadius: "var(--r-sm)", cursor: "pointer", padding: "7px 9px", fontSize: 13, transition: "all 0.15s", lineHeight: 1 }}
+            
           >
             ↩
           </button>

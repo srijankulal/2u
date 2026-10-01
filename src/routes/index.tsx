@@ -12,14 +12,16 @@ function LandingPage() {
     <div style={{ minHeight: "100vh", background: "#F7F6F3", fontFamily: "var(--sans)" }}>
 
       {/* ── Nav ─────────────────────────────────────── */}
-      <header style={{ borderBottom: "1px solid #E4E2DC" }}>
+      <header style={{ borderBottom: "1px solid #E4E2DC", background: "rgba(247, 246, 243, 0.9)", backdropFilter: "blur(8px)", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#1A1917", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--serif)", fontSize: 13 }}>
-              2U
-            </div>
-            <span style={{ fontFamily: "var(--serif)", fontSize: 17, color: "#1A1917" }}>2U Postal</span>
-          </div>
+          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            <img
+              src="/favicon.png"
+              alt="2U Logo"
+              style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", boxShadow: "0 2px 6px rgba(0,0,0,0.12)" }}
+            />
+            <span style={{ fontFamily: "var(--serif)", fontSize: 18, fontWeight: 600, color: "#1A1917", letterSpacing: "-0.01em" }}>2U Postal</span>
+          </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {user ? (
               <Link to="/app" className="btn btn-primary btn-sm">Open Mailbox</Link>
@@ -34,27 +36,58 @@ function LandingPage() {
       </header>
 
       {/* ── Hero ─────────────────────────────────────── */}
-      <section style={{ maxWidth: 780, margin: "0 auto", padding: "96px 32px 80px", textAlign: "center" }}>
-        <div style={{ display: "inline-block", fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "1.5px", color: "#8A8784", border: "1px solid #E4E2DC", borderRadius: 999, padding: "5px 16px", marginBottom: 36 }}>
-          Time-Capsule Letters
+      <section style={{ maxWidth: 960, margin: "0 auto", padding: "80px 32px 60px", textAlign: "center" }}>
+        <div style={{ display: "inline-block", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "1.5px", color: "#8A8784", border: "1px solid #E4E2DC", borderRadius: 999, padding: "6px 18px", marginBottom: 32, background: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          📮 Time-Capsule Letters
         </div>
 
         <h1 style={{ fontFamily: "var(--serif)", fontSize: "clamp(44px, 7vw, 72px)", fontWeight: 400, lineHeight: 1.1, color: "#1A1917", marginBottom: 24, letterSpacing: "-0.015em" }}>
           Write a letter to<br />
-          <span style={{ fontStyle: "italic", color: "#8A8784" }}>your future self</span>
+          <span style={{ fontStyle: "italic", color: "#8B1A1A" }}>your future self</span>
         </h1>
 
-        <p style={{ fontSize: 17, color: "#4A4844", lineHeight: 1.75, maxWidth: 520, margin: "0 auto 44px", fontWeight: 300 }}>
+        <p style={{ fontSize: 18, color: "#4A4844", lineHeight: 1.75, maxWidth: 540, margin: "0 auto 40px", fontWeight: 300 }}>
           Compose a heartfelt message today. Choose when to open it — six months, a year, or a decade from now.
         </p>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-          <Link to="/register" className="btn btn-primary" style={{ padding: "13px 28px", fontSize: 15 }}>
-            Write your first letter
-          </Link>
-          <Link to="/login" className="btn btn-secondary" style={{ padding: "13px 28px", fontSize: 15 }}>
-            Sign in
-          </Link>
+        <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap", marginBottom: 48 }}>
+          {user ? (
+            <>
+              <Link to="/app" className="btn btn-primary btn-lg" style={{ padding: "14px 32px", fontSize: 16 }}>
+                Open My Mailbox →
+              </Link>
+              <Link to="/app/compose" className="btn btn-secondary btn-lg" style={{ padding: "14px 28px", fontSize: 16 }}>
+                Write a Letter ✒
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/register" className="btn btn-primary btn-lg" style={{ padding: "14px 32px", fontSize: 16 }}>
+                Write your first letter →
+              </Link>
+              <Link to="/login" className="btn btn-secondary btn-lg" style={{ padding: "14px 28px", fontSize: 16 }}>
+                Sign in
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Hero Showcase Image */}
+        <div style={{
+          position: "relative",
+          maxWidth: 720,
+          margin: "0 auto",
+          borderRadius: 20,
+          overflow: "hidden",
+          boxShadow: "0 24px 48px -12px rgba(44, 24, 16, 0.18), 0 0 0 1px rgba(0,0,0,0.06)",
+          background: "#FFFFFF",
+          transition: "transform 0.3s ease, box-shadow 0.3s ease",
+        }}>
+          <img
+            src="/hero.png"
+            alt="2U Letters to Future Self"
+            style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }}
+          />
         </div>
       </section>
 
@@ -111,9 +144,15 @@ function LandingPage() {
         <p style={{ fontSize: 15, color: "#4A4844", marginBottom: 36, fontWeight: 300 }}>
           Start writing. Your future self is waiting.
         </p>
-        <Link to="/register" className="btn btn-primary" style={{ padding: "14px 32px", fontSize: 15 }}>
-          Begin writing →
-        </Link>
+        {user ? (
+          <Link to="/app/compose" className="btn btn-primary btn-lg" style={{ padding: "14px 32px", fontSize: 15 }}>
+            Begin writing →
+          </Link>
+        ) : (
+          <Link to="/register" className="btn btn-primary btn-lg" style={{ padding: "14px 32px", fontSize: 15 }}>
+            Begin writing →
+          </Link>
+        )}
       </section>
 
       {/* ── Footer ────────────────────────────────────── */}
