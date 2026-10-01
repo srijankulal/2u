@@ -1,8 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { db } from '#/lib/db'
-import { letters, users } from '#/lib/db/schema'
-import { sendLetterEmail } from '#/lib/email'
-import { lte, isNull, and, eq } from 'drizzle-orm'
+import { supabase } from '../../utils/supabase'
+import { sendLetterEmail } from '../../lib/email'
 
 export const Route = createFileRoute('/api/cron')({
     server: {
@@ -24,50 +22,63 @@ export const Route = createFileRoute('/api/cron')({
                 }
 
                 try {
-                    if (!env.DATABASE_URL) {
-                        return new Response(
-                            JSON.stringify({ error: 'DATABASE_URL environment variable is missing in Vercel' }),
-                            { status: 500, headers: { 'Content-Type': 'application/json' } }
-                        )
-                    }
-
                     const now = new Date()
 
-                    const pendingLetters = await db
-                        .select({
-                            letter: letters,
-                            user: users,
-                        })
-                        .from(letters)
-                        .innerJoin(users, eq(letters.userId, users.id))
-                        .where(
-                            and(
-                                lte(letters.deliverAt, now),
-                                isNull(letters.deliveredAt)
-                            )
-                        )
+                    const { data: pendingLetters, error: fetchError } = await supabase
+                        .from('letters')
+                        .select('*')
+                        .lte('deliver_at', now.toISOString())
+                        .is('delivered_at', null)
 
-                    if (pendingLetters.length === 0) {
+                    if (fetchError) {
+                        throw new Error(`Database error: ${fetchError.message}`)
+                    }
+
+                    if (!pendingLetters || pendingLetters.length === 0) {
                         return new Response(
-                            JSON.stringify({ message: 'No letters to deliver', processed: 0 }),
+                            JSON.stringify({ message: 'No letters to deliver at this time', processed: 0, checkedAt: now.toISOString() }),
                             { status: 200, headers: { 'Content-Type': 'application/json' } }
                         )
                     }
 
                     const results = await Promise.allSettled(
-                        pendingLetters.map(async ({ letter, user }) => {
+                        pendingLetters.map(async (l: any) => {
+                            const { data: user, error: userError } = await supabase
+                                .from('users')
+                                .select('*')
+                                .eq('id', l.user_id)
+                                .single()
+
+                            if (userError || !user || !user.email) {
+                                throw new Error(`Recipient user not found for letter ${l.id}`)
+                            }
+
                             await sendLetterEmail({
                                 to: user.email,
                                 toName: user.name || 'Friend',
-                                letter,
+                                letter: {
+                                    id: l.id,
+                                    userId: l.user_id,
+                                    title: l.title,
+                                    content: l.content,
+                                    imageUrl: l.image_url,
+                                    type: l.type,
+                                    deliverAt: l.deliver_at,
+                                    deliveredAt: l.delivered_at,
+                                    createdAt: l.created_at,
+                                },
                             })
 
-                            await db
-                                .update(letters)
-                                .set({ deliveredAt: new Date() })
-                                .where(eq(letters.id, letter.id))
+                            const { error: updateError } = await supabase
+                                .from('letters')
+                                .update({ delivered_at: new Date().toISOString() })
+                                .eq('id', l.id)
 
-                            return letter.id
+                            if (updateError) {
+                                throw new Error(`Failed to mark delivered: ${updateError.message}`)
+                            }
+
+                            return l.id
                         })
                     )
 
@@ -76,10 +87,11 @@ export const Route = createFileRoute('/api/cron')({
 
                     return new Response(
                         JSON.stringify({
-                            message: 'Cron job execution completed',
+                            message: 'Cron job execution completed successfully',
                             total: pendingLetters.length,
                             successful,
                             failed,
+                            timestamp: now.toISOString(),
                         }),
                         { status: 200, headers: { 'Content-Type': 'application/json' } }
                     )
@@ -93,4 +105,5 @@ export const Route = createFileRoute('/api/cron')({
             },
         },
     },
-})
+})
+
