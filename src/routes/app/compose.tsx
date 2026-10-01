@@ -6,13 +6,12 @@ import { useToast } from '../../components/ToastProvider'
 import { createTypedLetterFn, createScannedLetterFn } from '../../server/letters'
 
 const PRESET_OPTIONS = [
-    { label: 'Today (Test)', months: 0, years: 0, minutes: 2 },
-    { label: '6 Months', months: 6, years: 0, minutes: 0 },
-    { label: '1 Year', months: 0, years: 1, minutes: 0 },
-    { label: '2 Years', months: 0, years: 2, minutes: 0 },
-    { label: '3 Years', months: 0, years: 3, minutes: 0 },
-    { label: '5 Years', months: 0, years: 5, minutes: 0 },
-    { label: '10 Years', months: 0, years: 10, minutes: 0 },
+    { label: '6 Months', months: 6, years: 0 },
+    { label: '1 Year', months: 0, years: 1 },
+    { label: '2 Years', months: 0, years: 2 },
+    { label: '3 Years', months: 0, years: 3 },
+    { label: '5 Years', months: 0, years: 5 },
+    { label: '10 Years', months: 0, years: 10 },
 ]
 
 const INSPIRATION_PROMPTS = [
@@ -22,25 +21,18 @@ const INSPIRATION_PROMPTS = [
     { title: 'Wisdom & Habits', text: 'Remember the lessons we learned the hard way this year: never compromise on...' },
 ]
 
-function formatToLocalInputDate(d: Date): string {
+function formatToLocalDate(d: Date): string {
     const year = d.getFullYear()
     const month = String(d.getMonth() + 1).padStart(2, '0')
     const day = String(d.getDate()).padStart(2, '0')
-    const hours = String(d.getHours()).padStart(2, '0')
-    const mins = String(d.getMinutes()).padStart(2, '0')
-    return `${year}-${month}-${day}T${hours}:${mins}`
+    return `${year}-${month}-${day}`
 }
 
-function getPresetDate(years: number, months: number, minutes = 0): string {
+function getPresetDate(years: number, months: number): string {
     const d = new Date()
-    if (years === 0 && months === 0 && minutes > 0) {
-        d.setMinutes(d.getMinutes() + minutes)
-    } else {
-        d.setFullYear(d.getFullYear() + years)
-        d.setMonth(d.getMonth() + months)
-        if (minutes > 0) d.setMinutes(d.getMinutes() + minutes)
-    }
-    return formatToLocalInputDate(d)
+    d.setFullYear(d.getFullYear() + years)
+    d.setMonth(d.getMonth() + months)
+    return formatToLocalDate(d)
 }
 
 export const Route = createFileRoute('/app/compose')({
@@ -84,16 +76,18 @@ function ComposePage() {
         maxSize: 10 * 1024 * 1024, // 10MB
     })
 
-    // Min date: now (allows today)
-    const minDate = formatToLocalInputDate(new Date())
+    // Min date: tomorrow
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const minDate = formatToLocalDate(tomorrow)
 
     const canWrite = (user?.slotsFree ?? 5) > 0
 
     const wordsCount = typed.content.trim().split(/\s+/).filter(Boolean).length
     const readingTime = Math.max(1, Math.ceil(wordsCount / 200))
 
-    const handlePresetClick = (years: number, months: number, minutes: number | undefined, label: string) => {
-        const dateStr = getPresetDate(years, months, minutes || 0)
+    const handlePresetClick = (years: number, months: number, label: string) => {
+        const dateStr = getPresetDate(years, months)
         setActivePreset(label)
         if (mode === 'typed') {
             setTyped(p => ({ ...p, deliverAt: dateStr }))
@@ -286,7 +280,7 @@ function ComposePage() {
                                     key={opt.label}
                                     type="button"
                                     className={`date-preset-btn ${activePreset === opt.label ? 'active' : ''}`}
-                                    onClick={() => handlePresetClick(opt.years, opt.months, opt.minutes, opt.label)}
+                                    onClick={() => handlePresetClick(opt.years, opt.months, opt.label)}
                                 >
                                     {opt.label}
                                 </button>
@@ -294,10 +288,10 @@ function ComposePage() {
                         </div>
 
                         <div className="form-group" style={{ margin: 0 }}>
-                            <label className="form-label" htmlFor="typed-deliver-at">Exact Delivery Date & Time</label>
+                            <label className="form-label" htmlFor="typed-deliver-at">Delivery Date</label>
                             <input
                                 id="typed-deliver-at"
-                                type="datetime-local"
+                                type="date"
                                 className="form-input"
                                 min={minDate}
                                 value={typed.deliverAt}
@@ -433,7 +427,7 @@ function ComposePage() {
                                     key={opt.label}
                                     type="button"
                                     className={`date-preset-btn ${activePreset === opt.label ? 'active' : ''}`}
-                                    onClick={() => handlePresetClick(opt.years, opt.months, opt.minutes, opt.label)}
+                                    onClick={() => handlePresetClick(opt.years, opt.months, opt.label)}
                                 >
                                     {opt.label}
                                 </button>
@@ -441,10 +435,10 @@ function ComposePage() {
                         </div>
 
                         <div className="form-group" style={{ margin: 0 }}>
-                            <label className="form-label" htmlFor="scanned-deliver-at">Exact Delivery Date & Time</label>
+                            <label className="form-label" htmlFor="scanned-deliver-at">Delivery Date</label>
                             <input
                                 id="scanned-deliver-at"
-                                type="datetime-local"
+                                type="date"
                                 className="form-input"
                                 min={minDate}
                                 value={scanned.deliverAt}

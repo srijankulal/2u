@@ -108,7 +108,7 @@ function LetterDetailPage() {
     const formatDateTime = (d: string) =>
         new Date(d).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
-    const minDate = new Date(Date.now() + 60000).toISOString().slice(0, 16)
+    const minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0]
 
     if (loading) {
         return (
@@ -189,10 +189,10 @@ function LetterDetailPage() {
                     </p>
                     <form onSubmit={handleReschedule} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
                         <div className="form-group" style={{ margin: 0, flex: '1 1 240px' }}>
-                            <label className="form-label" htmlFor="reschedule-input">New Delivery Date & Time</label>
+                            <label className="form-label" htmlFor="reschedule-input">New Delivery Date</label>
                             <input
                                 id="reschedule-input"
-                                type="datetime-local"
+                                type="date"
                                 className="form-input"
                                 min={minDate}
                                 value={newDate}
