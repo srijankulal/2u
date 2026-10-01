@@ -1,277 +1,214 @@
-Welcome to your new TanStack Start app! 
+# 📮 2U Postal — Letters to Your Future Self
 
-# Getting Started
+> *Compose a heartfelt message today. Choose when to open it — six months, a year, or a decade from now.*
 
-To run this application:
+[![Built with TanStack Start](https://img.shields.io/badge/TanStack-Start-FF4154?style=flat-square)](https://tanstack.com/start)
+[![Database Supabase](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E?style=flat-square)](https://supabase.com)
+[![Auth Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?style=flat-square)](https://clerk.com)
+[![Security AES--256--GCM](https://img.shields.io/badge/Security-AES--256--GCM-blue?style=flat-square)]()
+[![Deployed on Vercel](https://img.shields.io/badge/Deployment-Vercel-black?style=flat-square)](https://vercel.com)
+
+---
+
+## ✨ Features
+
+- ✒ **Distraction-Free Letter Studio**: Compose rich personal reflections or upload scanned photos of handwritten notes.
+- 🔒 **AES-256-GCM Privacy Encryption**: All letter contents, titles, and scanned image URLs are cryptographically encrypted before being stored in the database.
+- ⏳ **Sealed Time Capsules**: Letters remain locked and unreadable until their scheduled delivery date, featuring live countdown timers and wax seal monograms.
+- 📬 **Automated Email Dispatch**: Integrated with Vercel Cron (`/api/cron`) to dispatch unlocked letters directly to the author's inbox via **Resend** or **Gmail SMTP**.
+- 👤 **Seamless Authentication & Quotas**: Managed user profiles via **Clerk**, enforcing a 5-slot in-transit letter allowance per user.
+- 🎨 **Editorial Aesthetics**: Minimalist postal design system built with DM Serif Display, vintage postmarks, paper-lined textareas, and fluid responsive layouts.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Framework** | [TanStack Start](https://tanstack.com/start) (Full-stack React + Vite + Nitro) |
+| **Routing & SSR** | [TanStack Router](https://tanstack.com/router) |
+| **Authentication** | [Clerk](https://clerk.com) |
+| **Database** | [Supabase](https://supabase.com) (PostgreSQL via HTTPS REST SDK) |
+| **Image Storage** | [Cloudinary](https://cloudinary.com) |
+| **Email Service** | [Resend](https://resend.com) & [Nodemailer](https://nodemailer.com) |
+| **Encryption** | Node.js `crypto` (AES-256-GCM authenticated cipher) |
+| **Styling** | Vanilla CSS Design System with Google Fonts (`DM Serif Display` & `Inter`) |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js `v18+` or `v20+`
+- A free [Clerk](https://clerk.com) application
+- A free [Supabase](https://supabase.com) project
+- A [Cloudinary](https://cloudinary.com) cloud account (for handwritten scans)
+- A [Resend](https://resend.com) API key or Gmail App Password for email dispatch
+
+### 1. Clone & Install Dependencies
 
 ```bash
+git clone https://github.com/srijankulal/2u.git
+cd 2u
 npm install
+```
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Clerk Auth
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+# Supabase (Database)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOi...
+DATABASE_URL=postgresql://postgres:...@...pooler.supabase.com:6543/postgres
+
+# Cloudinary (Image Uploads)
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# Encryption Secret (Used for AES-256-GCM letter encryption)
+ENCRYPTION_SECRET=your-secure-random-32-byte-passphrase
+
+# Email Service (Resend or Gmail SMTP)
+RESEND_API_KEY=re_...
+# Optional Gmail SMTP fallback:
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-16-character-app-password
+
+# Cron Security Secret (Optional for securing /api/cron)
+CRON_SECRET=your-cron-secret
+```
+
+### 3. Initialize the Database Schema
+
+Run the SQL script located in [`supabase_schema.sql`](file:///c:/Codes/Projects/2u/supabase_schema.sql) within the **Supabase SQL Editor**:
+
+```sql
+-- Users Table
+create table if not exists users (
+  id uuid primary key default gen_random_uuid(),
+  clerk_user_id text unique not null,
+  name text not null,
+  email text not null,
+  created_at timestamptz default now()
+);
+
+-- Letters Table
+create table if not exists letters (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade not null,
+  title text not null,
+  content text,
+  image_url text,
+  type text not null default 'typed',
+  deliver_at timestamptz not null,
+  delivered_at timestamptz,
+  created_at timestamptz default now()
+);
+
+-- Indexes for high performance querying
+create index if not exists idx_letters_user_id on letters(user_id);
+create index if not exists idx_letters_deliver on letters(deliver_at, delivered_at);
+```
+
+### 4. Run Development Server
+
+```bash
 npm run dev
 ```
 
-# Building For Production
+Visit `http://localhost:3000` in your browser.
 
-To build this application for production:
+---
 
-```bash
-npm run build
-```
-
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
-
-```bash
-npm run test
-```
-
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
-
-
-# Resume Example
-
-A professional resume template built with TanStack Start and content-collections for Netlify deployment.
-
-## Features
-
-- **Content Collections**: Work experience and education managed as markdown files
-- **Skills Filter**: Interactive sidebar to filter jobs by skills/technologies
-- **Beautiful UI**: Modern design with shadcn/ui components
-- **SSR Ready**: Full server-side rendering with TanStack Start
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-├── content/
-│   ├── jobs/              # Work experience entries
-│   └── education/         # Education entries
+├── public/                     # Static assets (favicons, logos, hero artwork)
 ├── src/
-│   ├── components/
-│   │   └── ui/            # Shadcn UI components
-│   │       ├── badge.tsx
-│   │       ├── card.tsx
-│   │       ├── checkbox.tsx
-│   │       ├── hover-card.tsx
-│   │       └── separator.tsx
+│   ├── components/             # Reusable UI components
+│   │   ├── AuthProvider.tsx    # Clerk & User context provider
+│   │   └── ToastProvider.tsx   # Custom notification toasts
 │   ├── lib/
-│   │   └── utils.ts       # Utility functions
-│   └── routes/
-│       ├── __root.tsx     # Root layout
-│       └── index.tsx      # Resume page
-└── public/
-    └── headshot-on-white.jpg
+│   │   ├── crypto.ts           # AES-256-GCM encryption & decryption
+│   │   ├── email.ts            # Email delivery router (Resend / SMTP)
+│   │   ├── supabase.ts         # Supabase client initializer
+│   │   └── cloudinary.ts       # Cloudinary unsigned/signed uploader
+│   ├── routes/
+│   │   ├── __root.tsx          # Root HTML layout, headers, and meta
+│   │   ├── index.tsx           # Landing page with dynamic user state
+│   │   ├── login.tsx           # Clerk Sign-In portal
+│   │   ├── register.tsx        # Clerk Sign-Up portal
+│   │   ├── app.tsx             # Mailbox dashboard shell & responsive sidebar
+│   │   ├── app/
+│   │   │   ├── index.tsx       # Mailbox letter listing, stats & filter tabs
+│   │   │   ├── compose.tsx     # Letter composition studio (Typed & Scanned)
+│   │   │   └── letters.$id.tsx # Letter envelope & time-capsule unlocker
+│   │   └── api/
+│   │       ├── cron.ts         # Scheduled automated delivery handler
+│   │       ├── upload.ts       # Image upload endpoint
+│   │       └── user.ts         # Current authenticated user resolver
+│   ├── server/
+│   │   └── letters.ts          # Server functions (CRUD, encryption, quotas)
+│   ├── styles.css              # Editorial postal design system
+│   └── start.ts                # TanStack Start SSR entry point
+├── supabase_schema.sql         # Supabase database DDL schema
+├── vercel.json                 # Vercel deployment configuration & Cron triggers
+└── vite.config.ts              # Vite & Nitro server configuration
 ```
 
-## Adding Work Experience
-
-Create a new markdown file in `content/jobs/` with the following frontmatter:
-
-```markdown
----
-jobTitle: Your Job Title
-company: Company Name
-location: City, State
-startDate: 2024-01-01
-endDate: 2024-12-31  # Optional - omit for current position
-summary: Brief summary of your role
-tags:
-  - React
-  - TypeScript
-  - Web Development
 ---
 
-Detailed description of your responsibilities and achievements...
+## ⏰ Automated Delivery (Cron)
+
+2U Postal uses **Vercel Cron** configured in `vercel.json`:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "* * * * *"
+    }
+  ]
+}
 ```
 
-## Adding Education
+When `/api/cron` executes:
+1. It queries Supabase for all sealed letters where `deliver_at <= NOW()` and `delivered_at IS NULL`.
+2. Decrypts the secret letter contents and images using `decryptText()`.
+3. Dispatches a formatted HTML letter email to the recipient.
+4. Marks `delivered_at = NOW()` to complete the delivery cycle.
 
-Create a new markdown file in `content/education/`:
-
-```markdown
----
-school: School Name
-summary: Degree or Program Name
-startDate: 2020-01-01
-endDate: 2024-01-01
-tags:
-  - Relevant
-  - Skills
 ---
 
-Details about your education...
-```
+## 🔒 Security & Privacy
 
-## Development
+- **Zero Clear-Text Storage**: Letters written by users cannot be read in plaintext by database administrators or third parties.
+- **Unique IV & Auth Tag**: Every encrypted record uses a fresh 12-byte initialization vector (IV) and a 16-byte authentication tag ensuring integrity and tamper prevention.
+- **Server-Side Decryption**: Decryption only occurs in server functions when an authenticated user requests their own letter.
+
+---
+
+## 🚢 Deployment
+
+The project is optimized for deployment on **Vercel** with Nitro:
 
 ```bash
-# Start development server
-npm run dev
-
-# Build for production
 npm run build
 ```
 
+Deploy directly using the Vercel CLI or connecting the GitHub repository to the Vercel dashboard.
 
+---
 
-## Routing
+## 📄 License
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+MIT © [Srijan Kulal](https://github.com/srijankulal)
