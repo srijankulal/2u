@@ -1,7 +1,6 @@
+import nodemailer from 'nodemailer'
 import { Resend } from 'resend'
 import type { Letter } from './db/schema'
-
-const resend = new Resend(process.env['RESEND_API_KEY']!)
 
 export async function sendLetterEmail(opts: {
     to: string
@@ -9,9 +8,9 @@ export async function sendLetterEmail(opts: {
     letter: Letter
 }): Promise<void> {
     const { to, toName, letter } = opts
+    const env = process.env as Record<string, string | undefined>
 
     const isTyped = letter.type === 'typed'
-
     const htmlContent = isTyped
         ? buildTypedEmailHtml(toName, letter)
         : buildScannedEmailHtml(toName, letter)
@@ -23,13 +22,43 @@ export async function sendLetterEmail(opts: {
         }]
         : []
 
-    await resend.emails.send({
-        from: `"2U — Letters" <${process.env['RESEND_FROM'] ?? 'onboarding@resend.dev'}>`,
-        to,
-        subject: `💌 A letter from your past self — ${letter.title}`,
-        html: htmlContent,
-        attachments,
-    })
+    const smtpUser = env.SMTP_EMAIL || env.GMAIL_USER
+    const smtpPass = env.SMTP_PASSWORD || env.GMAIL_APP_PASSWORD
+
+    // 1. Prefer Gmail / SMTP if configured (100% free, sends to any recipient)
+    if (smtpUser && smtpPass) {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: smtpUser,
+                pass: smtpPass.replace(/\s+/g, ''), // clean any accidental spaces
+            },
+        })
+
+        await transporter.sendMail({
+            from: `"2U — Letters to Your Future Self" <${smtpUser}>`,
+            to,
+            subject: `💌 A letter from your past self — ${letter.title}`,
+            html: htmlContent,
+            attachments,
+        })
+        return
+    }
+
+    // 2. Fallback to Resend if API key is provided
+    if (env.RESEND_API_KEY) {
+        const resend = new Resend(env.RESEND_API_KEY)
+        await resend.emails.send({
+            from: `"2U — Letters" <${env.RESEND_FROM ?? 'onboarding@resend.dev'}>`,
+            to,
+            subject: `💌 A letter from your past self — ${letter.title}`,
+            html: htmlContent,
+            attachments,
+        })
+        return
+    }
+
+    throw new Error('No email service configured. Please set SMTP_EMAIL & SMTP_PASSWORD or RESEND_API_KEY.')
 }
 
 function buildTypedEmailHtml(name: string, letter: Letter) {
