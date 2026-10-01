@@ -8,12 +8,16 @@ export const Route = createFileRoute('/api/cron')({
     server: {
         handlers: {
             GET: async ({ request }: { request: Request }) => {
+                const env = process.env as Record<string, string | undefined>
+                const isDev = env.NODE_ENV === 'development'
                 const authHeader = request.headers.get('authorization')
-                const cronSecret = (process.env as Record<string, string | undefined>).CRON_SECRET
-                const expectedAuth = `Bearer ${cronSecret}`
+                const cronSecret = env.CRON_SECRET
+                const expectedAuth = cronSecret ? `Bearer ${cronSecret}` : null
 
-                if (!cronSecret || authHeader !== expectedAuth) {
-                    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                const isAuthorized = isDev || (expectedAuth && authHeader === expectedAuth)
+
+                if (!isAuthorized) {
+                    return new Response(JSON.stringify({ error: 'Unauthorized. Provide Authorization: Bearer <CRON_SECRET>' }), {
                         status: 401,
                         headers: { 'Content-Type': 'application/json' },
                     })
